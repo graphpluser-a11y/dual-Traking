@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dual Live Map Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f5f5f5;
+    }
+
+    header {
+      padding: 8px 12px;
+      background: #111827;
+      color: #f9fafb;
+      font-size: 14px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 8px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #374151;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+    }
+
+    button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: #2563eb;
+      color: #f9fafb;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    button:active {
+      opacity: 0.85;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .frames {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .frame-wrapper {
+      flex: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: #111827;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .frame-title {
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #e5e7eb;
+      background: #1f2937;
+      flex-shrink: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      flex: 1;
+      background: #000;
+    }
+
+    @media (orientation: portrait) {
+      /* 세로로 들고 있을 때도 억지로 2분할 유지 */
+      .frames {
+        flex-direction: row;
+      }
+    }
+
+    @media (orientation: landscape) {
+      .frames {
+        flex-direction: row;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    Dual Live Map Viewer – 두 개의 URL을 한 화면에서 보기
+  </header>
+
+  <main>
+    <form id="urlForm">
+      <div class="form-row">
+        <label for="url1">URL 1</label>
+        <input
+          id="url1"
+          type="url"
+          placeholder="예: https://share.garmin.com/xxxx"
+          autocomplete="off"
+        />
+      </div>
+      <div class="form-row">
+        <label for="url2">URL 2</label>
+        <input
+          id="url2"
+          type="url"
+          placeholder="예: https://share.garmin.com/yyyy"
+          autocomplete="off"
+        />
+      </div>
+      <button type="submit">두 지도 불러오기</button>
+      <div class="hint">
+        ▷ 아이폰은 가로(landscape)로 돌려서 보면 더 넓게 보인다.<br />
+        ▷ 어떤 사이트는 보안 설정 때문에 이 화면 안에서 안 뜰 수도 있다(X-Frame-Options).
+      </div>
+    </form>
+
+    <div class="frames">
+      <div class="frame-wrapper">
+        <div class="frame-title">화면 1</div>
+        <iframe id="frame1" title="frame1"></iframe>
+      </div>
+      <div class="frame-wrapper">
+        <div class="frame-title">화면 2</div>
+        <iframe id="frame2" title="frame2"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function normalizeUrl(value) {
+      if (!value) return "";
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      if (!/^https?:\/\//i.test(trimmed)) {
+        return "https://" + trimmed;
+      }
+      return trimmed;
+    }
+
+    const form = document.getElementById("urlForm");
+    const url1Input = document.getElementById("url1");
+    const url2Input = document.getElementById("url2");
+    const frame1 = document.getElementById("frame1");
+    const frame2 = document.getElementById("frame2");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const u1 = normalizeUrl(url1Input.value);
+      const u2 = normalizeUrl(url2Input.value);
+
+      if (u1) frame1.src = u1;
+      if (u2) frame2.src = u2;
+    });
+
+    // URL 파라미터로 ?u1=...&u2=... 넘기면 자동 로딩
+    (function loadFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const u1 = params.get("u1");
+      const u2 = params.get("u2");
+      if (u1) {
+        const n1 = normalizeUrl(u1);
+        url1Input.value = n1;
+        frame1.src = n1;
+      }
+      if (u2) {
+        const n2 = normalizeUrl(u2);
+        url2Input.value = n2;
+        frame2.src = n2;
+      }
+    })();
+  </script>
+</body>
+</html>
